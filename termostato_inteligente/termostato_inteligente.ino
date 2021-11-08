@@ -4,8 +4,10 @@
 //#define DHTTYPE DHT22
 #define DHTTYPE DHT11
 
-const char* ssid = "********";
-const char* password = "********";
+//const char* ssid = "********";
+//const char* password = "********";
+const char* ssid = "VIVO-8965";
+const char* password = "C9D3C88965";
 
 
 WiFiServer server(80); //Shield irá receber as requisições das páginas (o padrão WEB é a porta 80)
@@ -146,6 +148,16 @@ void loop()
 
                         //-------------------------------------------------------------------------------------------------------------
 
+                        client.print("<style>");
+                        client.print("h1   {color: blue;}");
+                        client.print("body {background-color: powderblue;}");
+                        client.print("p    {color: white;}");
+                        client.print(" .dadosDTH11 {background-color: red;}");
+
+
+
+                        client.print("</style>");
+
                         client.println("<body onload=\"LeDadosDoArduino()\">");                      //<------ALTERADO                    
                         client.println("<h1>PORTAS EM FUN&Ccedil;&Atilde;O ANAL&Oacute;GICA</h1>");
 
@@ -178,17 +190,25 @@ void loop()
                         client.println("<button type=\"submit\">Envia para o ESP8266</button>");
                         client.println("</form>"); 
                        
-                        client.println("<br/>");  
+                        client.println("<br/>");                      
 
-                        client.println("Temperatura");
-                        client.println(tempf);
-                        client.println("F");
-                           
-                        client.println("<br/>");
-                           
-                        client.println("Umidade");
-                        client.println(humi);
-                        client.println("%");
+                        client.println("<div class='dadosDTH11'>"); 
+                    
+                          client.println("<p>");
+                            client.println("Temperatura");
+                            client.println(tempf);
+                            client.println("F");
+                          client.println("</p>");                                              
+                         
+                          client.println("<p>");   
+                            client.println("Umidade");
+                            client.println(humi);
+                            client.println("%");
+                         client.println("</p>");
+                         
+                        client.println("</div>");
+                       
+
                         
                         client.println("</body>");
                         //------------------------------------------------------------------------------------
