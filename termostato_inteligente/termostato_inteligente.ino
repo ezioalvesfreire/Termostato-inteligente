@@ -162,8 +162,9 @@ void loop()
 
                         client.print("<style>");
                         client.print("h1   {color: blue;}");
-                        client.print("body {background-color: powderblue;}");
-                        client.print(" .styleMobile {backgrond-color: white;}");
+                        client.print("body {background-color: #A9A9A9;}");
+                        client.print(" .styleMobile {background-color: white;margin: 25px auto; border: solid 12px; border-top: solid 60px; border-bottom: solid 61px; border-radius: 43px; width: 706px; background-color: white; height: 900px; padding: 10px;}");
+                        
                         client.print("p    {color: white;}");  
                         client.println(".statusCooler {color: black}");                                           
                         client.print(" .dadosDTH11 {background-color: red;}");
@@ -175,7 +176,7 @@ void loop()
 
                         client.println("<body onload=\"LeDadosDoArduino()\">");                      //<------ALTERADO 
                          client.println("<div class='styleMobile'>");
-                        client.println("<h1>------------TERMOSTATO INTELIGENTE-------------</h1>");                   
+                        client.println("<h1>---------- TERMOSTATO INTELIGENTE ----------</h1>");                   
                         client.println("<h1>PORTAS EM FUN&Ccedil;&Atilde;O ANAL&Oacute;GICA</h1>");
 
                         for (int nL=0; nL < qtdePinosAnalogicos; nL++) {
