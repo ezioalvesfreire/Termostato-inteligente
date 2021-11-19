@@ -1,6 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <DHT.h>
 
+
 //#define DHTTYPE DHT22
 #define DHTTYPE DHT11
 
@@ -8,6 +9,7 @@
 //const char* password = "********";
 const char* ssid = "VIVO-8965";
 const char* password = "C9D3C88965";
+
 
 
 WiFiServer server(80); //Shield irá receber as requisições das páginas (o padrão WEB é a porta 80)
@@ -21,14 +23,15 @@ void lePortaAnalogica(byte porta, byte posicao, WiFiClient cl);
 String getURLRequest(String *requisicao);
 bool mainPageRequest(String *requisicao);
 
+int statusCooler = 4; // (D2 = 4)
 const byte dhtPin = 5; // (D1 = 5)
 
 DHT dht(dhtPin, DHTTYPE);
 float temp, tempf, humi;
 
-const byte qtdePinosDigitais = 7;
-byte pinosDigitais[qtdePinosDigitais] = {2           , 4     , 5     , 12     , 13     , 14     , 15     }; // ((2=d4), (4=d2), (5=d1), (12=D6), (13=D7), (14=D5 ), (15=D8))
-byte modoPinos[qtdePinosDigitais]     = {INPUT_PULLUP, OUTPUT, OUTPUT, OUTPUT, OUTPUT, OUTPUT, OUTPUT};
+const byte qtdePinosDigitais = 5;
+byte pinosDigitais[qtdePinosDigitais] = {2               ,12     , 13    , 14    , 15     }; // ((2=d4),  (12=D6), (13=D7), (14=D5 ), (15=D8))
+byte modoPinos[qtdePinosDigitais]     = {INPUT_PULLUP,  OUTPUT, OUTPUT, OUTPUT, OUTPUT};
 
 const byte qtdePinosAnalogicos = 1;
 byte pinosAnalogicos[qtdePinosAnalogicos] = {A0};
@@ -37,6 +40,7 @@ void setup()
 {   
     dht.begin();
     Serial.begin(115200);
+    pinMode(statusCooler, OUTPUT);
 
     //Conexão na rede WiFi  
     Serial.println();
@@ -151,14 +155,16 @@ void loop()
                         client.print("<style>");
                         client.print("h1   {color: blue;}");
                         client.print("body {background-color: powderblue;}");
-                        client.print("p    {color: white;}");
+                        client.print("p    {color: white;}");  
+                        client.println(".statusCooler {color: black}");                                           
                         client.print(" .dadosDTH11 {background-color: red;}");
 
 
 
                         client.print("</style>");
 
-                        client.println("<body onload=\"LeDadosDoArduino()\">");                      //<------ALTERADO                    
+                        client.println("<body onload=\"LeDadosDoArduino()\">");                      //<------ALTERADO 
+                        client.println("<h1>------------TERMOSTATO INTELIGENTE-------------</h1>");                   
                         client.println("<h1>PORTAS EM FUN&Ccedil;&Atilde;O ANAL&Oacute;GICA</h1>");
 
                         for (int nL=0; nL < qtdePinosAnalogicos; nL++) {
@@ -207,7 +213,15 @@ void loop()
                          client.println("</p>");
                          
                         client.println("</div>");
+                       if(tempf >= 90){
+                            digitalWrite(statusCooler,HIGH);
+                            client.println("<p class='statusCooler'>VENTILA&Ccedil;&Atilde;O - <button style= 'background-color: green'>LIGADA</button></p>");
+                        }else{
+                                client.println("<p class='statusCooler'>VENTILA&Ccedil;&Atilde;O - <button style= 'background-color: red'>DESLIGADA</button></p>");
+                                digitalWrite(statusCooler,LOW);
+                          } 
                        
+                     
 
                         
                         client.println("</body>");
