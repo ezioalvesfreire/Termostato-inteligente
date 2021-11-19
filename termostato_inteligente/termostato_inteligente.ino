@@ -1,5 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <DHT.h>
+#include <PubSubClient.h>
+
 
 
 //#define DHTTYPE DHT22
@@ -10,7 +12,13 @@
 const char* ssid = "VIVO-8965";
 const char* password = "C9D3C88965";
 
+//MQTT Server
+const char* BROKER_MQTT = "iot.eclipse.org";  //URL do broker que deseja utilizar
+int BROKER_PORT = 123; //obs: definir a porta do briker MQTT
 
+#define ID_MQTT "TI-IOT01"
+#define TOPIC_PUBLISH "TI-TempUmid"
+//PubSubClient MQTT(wifiClient);
 
 WiFiServer server(80); //Shield irá receber as requisições das páginas (o padrão WEB é a porta 80)
 
@@ -155,15 +163,18 @@ void loop()
                         client.print("<style>");
                         client.print("h1   {color: blue;}");
                         client.print("body {background-color: powderblue;}");
+                        client.print(" .styleMobile {backgrond-color: white;}");
                         client.print("p    {color: white;}");  
                         client.println(".statusCooler {color: black}");                                           
                         client.print(" .dadosDTH11 {background-color: red;}");
+                        
 
 
 
                         client.print("</style>");
 
                         client.println("<body onload=\"LeDadosDoArduino()\">");                      //<------ALTERADO 
+                         client.println("<div class='styleMobile'>");
                         client.println("<h1>------------TERMOSTATO INTELIGENTE-------------</h1>");                   
                         client.println("<h1>PORTAS EM FUN&Ccedil;&Atilde;O ANAL&Oacute;GICA</h1>");
 
@@ -203,8 +214,14 @@ void loop()
                           client.println("<p>");
                             client.println("Temperatura");
                             client.println(tempf);
-                            client.println("F");
-                          client.println("</p>");                                              
+                            client.println("*F");
+                          client.println("</p>"); 
+
+                          client.println("<p>");
+                            client.println("Temperatura");
+                            client.println(temp);
+                            client.println("*C");
+                          client.println("</p>");   
                          
                           client.println("<p>");   
                             client.println("Umidade");
@@ -223,7 +240,7 @@ void loop()
                        
                      
 
-                        
+                          client.println("</div>");
                         client.println("</body>");
                         //------------------------------------------------------------------------------------
                         client.println("</html>");
