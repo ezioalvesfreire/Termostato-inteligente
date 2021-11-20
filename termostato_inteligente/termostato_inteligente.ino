@@ -161,10 +161,11 @@ void loop()
                         //-------------------------------------------------------------------------------------------------------------
 
                         client.print("<style>");
-                        client.print("h1   {color: blue;}");
-                        client.print("h1.sbt  {font-size: 27px;}");
+                        client.print("h1   {color: blue;font-size: 23px;}");
+                        client.print("h1.sbt  {font-size: 20px;}");
+                        client.print("h1.title  {margin:0 0 30px;}");
                         client.print("body {background-color: #A9A9A9;}");
-                        client.print(" .styleMobile {background-color: white;margin: 25px auto; border: solid 12px; border-top: solid 60px; border-bottom: solid 61px; border-radius: 43px; width: 706px; background-color: white; height: 900px; padding: 10px;font-family: tahoma;}");
+                        client.print(" .styleMobile {background-color: white;margin: 25px auto; border: solid 12px; border-top: solid 60px; border-bottom: solid 61px; border-radius: 43px; width: 481px; background-color: white; height: 801px; padding: 10px;font-family: tahoma;}");
                         
                         client.print("p    {color: white;}");  
                         client.println(".statusCooler {color: black}");                                           
@@ -177,7 +178,7 @@ void loop()
 
                         client.println("<body onload=\"LeDadosDoArduino()\">");                      //<------ALTERADO 
                          client.println("<div class='styleMobile'>");
-                        client.println("<h1>--------- TERMOSTATO INTELIGENTE --------</h1>");                   
+                        client.println("<h1 class='title'>------- TERMOSTATO INTELIGENTE -------</h1>");                   
                         client.println("<h1 class='sbt'>PORTAS EM FUN&Ccedil;&Atilde;O ANAL&Oacute;GICA</h1>");
 
                         for (int nL=0; nL < qtdePinosAnalogicos; nL++) {
