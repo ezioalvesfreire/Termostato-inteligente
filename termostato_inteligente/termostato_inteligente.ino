@@ -9,18 +9,21 @@
 #define pinBotao1 16 // D0=GPIO-16 /// <<<<<<<<<<<<<<<<<<<<<
 // porta disponivel 15 // D8 = GPIO15
 
-const char* ssid = "VIVO-8965";
-const char* password = "C9D3C88965";
+const char* SSID = "VIVO-8965";
+const char* PASSWORD = "C9D3C88965";
+WiFiClient wifiClient;
 
 //MQTT Server
 const char* BROKER_MQTT = "mqtt.eclipseprojects.io"; //URL do broker MQTT que se deseja utilizar novo link
 int BROKER_PORT = 1883;                      // Porta do Broker MQTT <<<<<<<<<<<<<
 //int BROKER_PORT = 123; //obs: definir a porta do briker MQTT
 
-#define ID_MQTT "TI-IOT01"
-#define TOPIC_PUBLISH "TI-TempUmid"
-PubSubClient MQTT(WiFiClient);
-//PubSubClient MQTT(wifiClient);        // Instancia o Cliente MQTT passando o objeto espClient
+//#define ID_MQTT "TI-IOT01"
+//#define TOPIC_PUBLISH "TI-TempUmid"
+#define ID_MQTT  "BCI01"            //Informe um ID unico e seu. Caso sejam usados IDs repetidos a ultima conexão irá sobrepor a anterior. 
+#define TOPIC_PUBLISH "BCIBotao1"    //Informe um Tópico único. Caso sejam usados tópicos em duplicidade, o último irá eliminar o anterior.
+//PubSubClient MQTT(WiFiClient);
+PubSubClient MQTT(wifiClient);        // Instancia o Cliente MQTT passando o objeto espClient
 
 WiFiServer server(80); //Shield irá receber as requisições das páginas (o padrão WEB é a porta 80)
 
@@ -34,6 +37,7 @@ String getURLRequest(String *requisicao);
 bool mainPageRequest(String *requisicao);
 
 void mantemConexoes();  //Garante que as conexoes com WiFi e MQTT Broker se mantenham ativas //<<<<<<<<<<<<<<<<<
+void conectaWiFi();     //Faz conexão com WiFi
 void conectaMQTT();     //Faz conexão com Broker <<<<<<<<<<<<<<<<<<<
 void enviaPacote();
 
@@ -61,9 +65,9 @@ void setup()
     //Conexão na rede WiFi  
     Serial.println();
     Serial.print("Conectando a ");
-    Serial.println(ssid);
+    Serial.println(SSID);
 
-    WiFi.begin(ssid, password);
+    WiFi.begin(SSID, PASSWORD);
 
     while (WiFi.status() != WL_CONNECTED) {
       delay(500);
@@ -451,14 +455,38 @@ void conectaMQTT() {
             delay(10000);
         }
     }
-}
+} // FIM CONECTA MQTT
 void mantemConexoes() {
     if (!MQTT.connected()) {
        conectaMQTT(); 
     }
     
-  //###  conectaWiFi(); //se não há conexão com o WiFI, a conexão é refeita
-}
+   conectaWiFi(); //se não há conexão com o WiFI, a conexão é refeita
+} // FIM MATEM CONEXÔES
+
+void conectaWiFi() {
+
+  if (WiFi.status() == WL_CONNECTED) {
+     return;
+  }
+        
+  Serial.print("Conectando-se na rede: ");
+  Serial.print(SSID);
+  Serial.println("  Aguarde!");
+
+  WiFi.begin(SSID, PASSWORD); // Conecta na rede WI-FI  
+  while (WiFi.status() != WL_CONNECTED) {
+      delay(100);
+      Serial.print(".");
+  }
+  
+  Serial.println();
+  Serial.print("Conectado com sucesso, na rede: ");
+  Serial.print(SSID);  
+  Serial.print("  IP obtido: ");
+  Serial.println(WiFi.localIP()); 
+} //FIM CONECTA WIFI
+
 void enviaValores() {
 static bool estadoBotao1 = HIGH;
 static bool estadoBotao1Ant = HIGH;
