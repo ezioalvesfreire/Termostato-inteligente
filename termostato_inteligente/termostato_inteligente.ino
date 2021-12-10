@@ -62,6 +62,7 @@ void setup()
      pinMode(pinBotao1, INPUT_PULLUP); 
     //  MQTT.setServer(BROKER_MQTT, BROKER_PORT);   
 
+
     //Conexão na rede WiFi  
     Serial.println();
     Serial.print("Conectando a ");
@@ -74,7 +75,7 @@ void setup()
       Serial.print(".");
     }
     Serial.println("");
-    Serial.println("WiFi conectado!");
+    Serial.println("WiFi conectado!"); 
 
     // Inicia o servidor WEB
     server.begin();
@@ -461,9 +462,10 @@ void mantemConexoes() {
        conectaMQTT(); 
     }
     
-   conectaWiFi(); //se não há conexão com o WiFI, a conexão é refeita
+   //conectaWiFi(); //se não há conexão com o WiFI, a conexão é refeita
 } // FIM MATEM CONEXÔES
 
+/*
 void conectaWiFi() {
 
   if (WiFi.status() == WL_CONNECTED) {
@@ -486,6 +488,8 @@ void conectaWiFi() {
   Serial.print("  IP obtido: ");
   Serial.println(WiFi.localIP()); 
 } //FIM CONECTA WIFI
+
+*/
 
 void enviaValores() {
 static bool estadoBotao1 = HIGH;
