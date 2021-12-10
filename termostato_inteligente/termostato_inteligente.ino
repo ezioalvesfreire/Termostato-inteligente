@@ -6,19 +6,21 @@
 
 //#define DHTTYPE DHT22
 #define DHTTYPE DHT11
+#define pinBotao1 16 // D0=GPIO-16 /// <<<<<<<<<<<<<<<<<<<<<
+// porta disponivel 15 // D8 = GPIO15
 
-//const char* ssid = "********";
-//const char* password = "********";
 const char* ssid = "VIVO-8965";
 const char* password = "C9D3C88965";
 
 //MQTT Server
-const char* BROKER_MQTT = "iot.eclipse.org";  //URL do broker que deseja utilizar
-int BROKER_PORT = 123; //obs: definir a porta do briker MQTT
+const char* BROKER_MQTT = "mqtt.eclipseprojects.io"; //URL do broker MQTT que se deseja utilizar novo link
+int BROKER_PORT = 1883;                      // Porta do Broker MQTT <<<<<<<<<<<<<
+//int BROKER_PORT = 123; //obs: definir a porta do briker MQTT
 
 #define ID_MQTT "TI-IOT01"
 #define TOPIC_PUBLISH "TI-TempUmid"
-//PubSubClient MQTT(wifiClient);
+PubSubClient MQTT(WiFiClient);
+//PubSubClient MQTT(wifiClient);        // Instancia o Cliente MQTT passando o objeto espClient
 
 WiFiServer server(80); //Shield irá receber as requisições das páginas (o padrão WEB é a porta 80)
 
@@ -31,6 +33,10 @@ void lePortaAnalogica(byte porta, byte posicao, WiFiClient cl);
 String getURLRequest(String *requisicao);
 bool mainPageRequest(String *requisicao);
 
+void mantemConexoes();  //Garante que as conexoes com WiFi e MQTT Broker se mantenham ativas //<<<<<<<<<<<<<<<<<
+void conectaMQTT();     //Faz conexão com Broker <<<<<<<<<<<<<<<<<<<
+void enviaPacote();
+
 int statusCooler = 4; // (D2 = 4)
 const byte dhtPin = 5; // (D1 = 5)
 
@@ -38,8 +44,8 @@ DHT dht(dhtPin, DHTTYPE);
 float temp, tempf, humi;
 
 const byte qtdePinosDigitais = 5;
-byte pinosDigitais[qtdePinosDigitais] = {2               ,12     , 13    , 14    , 15     }; // ((2=d4),  (12=D6), (13=D7), (14=D5 ), (15=D8))
-byte modoPinos[qtdePinosDigitais]     = {INPUT_PULLUP,  OUTPUT, OUTPUT, OUTPUT, OUTPUT};
+byte pinosDigitais[qtdePinosDigitais] = {2               ,12     , 13    , 14      }; // ((2=d4),  (12=D6), (13=D7), (14=D5 ), (15=D8))
+byte modoPinos[qtdePinosDigitais]     = {INPUT_PULLUP,  OUTPUT, OUTPUT, OUTPUT,};
 
 const byte qtdePinosAnalogicos = 1;
 byte pinosAnalogicos[qtdePinosAnalogicos] = {A0};
@@ -49,6 +55,8 @@ void setup()
     dht.begin();
     Serial.begin(115200);
     pinMode(statusCooler, OUTPUT);
+     pinMode(pinBotao1, INPUT_PULLUP); 
+    //  MQTT.setServer(BROKER_MQTT, BROKER_PORT);   
 
     //Conexão na rede WiFi  
     Serial.println();
@@ -75,11 +83,14 @@ void setup()
     for (int nP=0; nP < qtdePinosDigitais; nP++) {
         pinMode(pinosDigitais[nP], modoPinos[nP]);
     }
+   
 }
 
 void loop()
 {
-
+   mantemConexoes(); // <<<<<<<
+   enviaValores();   // <<<<<<<
+   MQTT.loop(); //<<<<<<<<<
     WiFiClient  client = server.available();
 
     if (client) { 
@@ -103,8 +114,7 @@ void loop()
                         //Conteudo da Página HTML
                         client.println("<!DOCTYPE html>");
                         client.println("<html>");
-
-                        
+                                                
                         client.println("<head>");
                         client.println("<title>Arduino via WEB</title>");
 
@@ -166,18 +176,13 @@ void loop()
                         client.print("h1.title  {margin:0 0 30px;}");
                         client.print("body {background-color: #A9A9A9;}");
                         client.print(" .styleMobile {background-color: white;margin: 25px auto; border: solid 12px; border-top: solid 60px; border-bottom: solid 61px; border-radius: 43px; width: 481px; background-color: white; height: 801px; padding: 10px;font-family: tahoma;}");
-                        
                         client.print("p    {color: white;}");  
                         client.println(".statusCooler {color: black}");                                           
                         client.print(" .dadosDTH11 {background-color: slateblue; margin: 40px auto;border: solid 5px; border-top: solid 5px; border-bottom: solid 5px; max-width: 372px; height: 127px; padding: 17px;}");
-                        
-
-
-
                         client.print("</style>");
-
+                        
                         client.println("<body onload=\"LeDadosDoArduino()\">");                      //<------ALTERADO 
-                         client.println("<div class='styleMobile'>");
+                        client.println("<div class='styleMobile'>");
                         client.println("<h1 class='title'>------- TERMOSTATO INTELIGENTE -------</h1>");                   
                         client.println("<h1 class='sbt'>PORTAS EM FUN&Ccedil;&Atilde;O ANAL&Oacute;GICA</h1>");
 
@@ -232,23 +237,22 @@ void loop()
                             client.println("%");
                          client.println("</p>");
                          
-                        client.println("</div>");
+                        client.println("</div>");                       
                        if(tempf >= 90){
+                        
                             digitalWrite(statusCooler,HIGH);
                             client.println("<p class='statusCooler'>VENTILA&Ccedil;&Atilde;O - <button style= 'background-color: green'>LIGADA</button></p>");
                         }else{
                                 client.println("<p class='statusCooler'>VENTILA&Ccedil;&Atilde;O - <button style= 'background-color: red'>DESLIGADA</button></p>");
                                 digitalWrite(statusCooler,LOW);
-                          } 
-                       
+                          }          
                      
-
                           client.println("</div>");
                         client.println("</body>");
                         //------------------------------------------------------------------------------------
                         client.println("</html>");
 
-                    
+                   
                     } else if (HTTP_req.indexOf("solicitacao_via_ajax") > -1) {     //<----- NOVO
 
                         Serial.println(HTTP_req);
@@ -292,14 +296,9 @@ void loop()
     Serial.print(" Deg F  ");
     Serial.print("  Humidity  = ");
     Serial.print(humi);
-    Serial.println(" %RH");
-
-    
+    Serial.println(" %RH");    
   }
-
-}
-
-
+} // ### Fim do loop
 void processaPorta(byte porta, byte posicao, WiFiClient cl)
 {
 static boolean LED_status = 0;
@@ -363,7 +362,6 @@ void lePortaDigital(byte porta, byte posicao, WiFiClient cl)
        cl.println("|");
     }
 }
-
 
 void lePortaAnalogica(byte porta, byte posicao, WiFiClient cl)
 {
@@ -440,3 +438,50 @@ boolean getTH()
     return false;
   }
 } 
+void conectaMQTT() { 
+    while (!MQTT.connected()) {
+        Serial.print("Conectando ao Broker MQTT: ");
+        Serial.println(BROKER_MQTT);
+        if (MQTT.connect(ID_MQTT)) {
+            Serial.println("Conectado ao Broker com sucesso!");
+        } 
+        else {
+            Serial.println("Noo foi possivel se conectar ao broker.");
+            Serial.println("Nova tentatica de conexao em 10s");
+            delay(10000);
+        }
+    }
+}
+void mantemConexoes() {
+    if (!MQTT.connected()) {
+       conectaMQTT(); 
+    }
+    
+  //###  conectaWiFi(); //se não há conexão com o WiFI, a conexão é refeita
+}
+void enviaValores() {
+static bool estadoBotao1 = HIGH;
+static bool estadoBotao1Ant = HIGH;
+static unsigned long debounceBotao1;
+
+  estadoBotao1 = digitalRead(pinBotao1);
+  if (  (millis() - debounceBotao1) > 30 ) {  //Elimina efeito Bouncing
+     if (!estadoBotao1 && estadoBotao1Ant) {
+
+        //Botao Apertado     
+        MQTT.publish(TOPIC_PUBLISH, "1");
+        Serial.println("Botao1 APERTADO. Payload enviado.");
+        
+        debounceBotao1 = millis();
+     } else if (estadoBotao1 && !estadoBotao1Ant) {
+
+        //Botao Solto
+        MQTT.publish(TOPIC_PUBLISH, "0");
+        Serial.println("Botao1 SOLTO. Payload enviado.");
+        
+        debounceBotao1 = millis();
+     }
+     
+  }
+  estadoBotao1Ant = estadoBotao1;
+} // Fim enviaValores
